@@ -1,0 +1,19 @@
+Ultron is a learning project for understanding how large language model systems work.
+
+Ultron v0.1 is a small Transformer model built from scratch.
+Ultron v0.1 uses a character-level tokenizer.
+Ultron v0.1 has 11,089 parameters.
+
+Ultron v0.2 uses the TinyStories dataset.
+Ultron v0.2 uses a custom Byte-Level BPE tokenizer.
+Ultron v0.2 has a vocabulary size of 2,000.
+Ultron v0.2 has a context length of 128 tokens.
+Ultron v0.2 uses an embedding dimension of 128.
+Ultron v0.2 uses 4 attention heads.
+Ultron v0.2 uses 4 Transformer layers.
+Ultron v0.2 has 1,323,728 parameters.
+Ultron v0.2 was trained using an NVIDIA GeForce RTX 3050 Laptop GPU.
+
+The current practical Ultron backend uses llama3:latest through Ollama.
+Ollama runs locally on the user's computer.
+The Ultron backend communicates with Ollama through its local HTTP API.

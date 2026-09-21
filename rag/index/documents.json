@@ -1,0 +1,22 @@
+{
+  "doc_498ef71907": {
+    "document_id": "doc_498ef71907",
+    "filename": "CAMUS_Albert_-_The_Stranger.pdf",
+    "stored_path": "C:\\Users\\rohit\\Downloads\\ALL projects\\Ultron\\rag\\uploads\\doc_498ef71907_CAMUS_Albert_-_The_Stranger.pdf",
+    "file_type": "pdf",
+    "number_of_chunks": 516,
+    "file_size": 550049,
+    "status": "indexed",
+    "uploaded_at": "2026-09-14 20:32:03"
+  },
+  "doc_8b7259fbdf": {
+    "document_id": "doc_8b7259fbdf",
+    "filename": "Rich_Dad_Poor_Dad.pdf",
+    "stored_path": "C:\\Users\\rohit\\Downloads\\ALL projects\\Ultron\\rag\\uploads\\doc_8b7259fbdf_Rich_Dad_Poor_Dad.pdf",
+    "file_type": "pdf",
+    "number_of_chunks": 947,
+    "file_size": 9831391,
+    "status": "indexed",
+    "uploaded_at": "2026-09-14 20:32:30"
+  }
+}

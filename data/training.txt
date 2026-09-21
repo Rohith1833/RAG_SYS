@@ -1,0 +1,10 @@
+Ultron is a small language model.
+Ultron learns patterns from text.
+A language model predicts what comes next.
+The model reads tokens and learns relationships between them.
+Machine learning uses mathematics to find useful patterns.
+Python is a programming language.
+A program is a sequence of instructions.
+Computers process information using numbers.
+Neural networks contain many learned parameters.
+A transformer uses attention to understand relationships between tokens.

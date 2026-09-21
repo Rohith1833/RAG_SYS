@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ULTRON — Local AI Assistant & Laboratory</title>
+  <meta name="description" content="Local AI assistant with semantic RAG retrieval powered by llama3:latest and all-MiniLM-L6-v2, alongside Ultron v0.2 TinyStories PyTorch model.">
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <div class="laboratory-canvas">
+    
+    <!-- Top Header -->
+    <header class="lab-header clay-card">
+      <div class="brand-group">
+        <div class="logo-orb">
+          <span class="logo-symbol">✦</span>
+        </div>
+        <div class="brand-text">
+          <h1 class="brand-title">ULTRON <span class="version-tag">AI ASSISTANT</span></h1>
+          <p class="brand-subtitle">Local RAG Knowledge Engine • llama3:latest • all-MiniLM-L6-v2</p>
+        </div>
+      </div>
+
+      <!-- Mode Switcher Tabs -->
+      <nav class="mode-nav-tabs" aria-label="Application Modes">
+        <button type="button" class="nav-tab active" id="tabRagBtn" data-target="ragView">
+          <span class="tab-icon">✦</span> Local RAG Assistant
+        </button>
+        <button type="button" class="nav-tab" id="tabLabBtn" data-target="labView">
+          <span class="tab-icon">⚡</span> v0.2 PyTorch Lab
+        </button>
+      </nav>
+
+      <!-- Header Telemetry Pill -->
+      <div class="header-status-area">
+        <div id="statusBadge" class="status-pill clay-pill loading" aria-live="polite">
+          <span class="status-indicator-dot"></span>
+          <span id="statusText" class="status-label">Initializing system...</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Global Notification Banner -->
+    <div id="errorBanner" class="error-banner clay-alert hidden" role="alert">
+      <span class="alert-icon">⚠️</span>
+      <span id="errorMessage" class="alert-text"></span>
+      <button type="button" id="dismissError" class="dismiss-btn" aria-label="Dismiss alert">✕</button>
+    </div>
+
+    <!-- ======================================================= -->
+    <!-- VIEW 1: LOCAL RAG ASSISTANT (STEP 10 INTEGRATION)       -->
+    <!-- ======================================================= -->
+    <main id="ragView" class="lab-grid active-view">
+      
+      <!-- Left: Grounded RAG Chat Stage -->
+      <section class="playground-panel clay-card" aria-label="Ultron Local RAG Assistant">
+        <div class="panel-header">
+          <div class="panel-title-wrap">
+            <span class="panel-tag">GROUNDED REASONING</span>
+            <h2 class="panel-title">Knowledge Assistant</h2>
+          </div>
+          <div class="session-stats">
+            <span class="stat-bubble" id="ragModelTag">LLM: llama3:latest</span>
+            <span class="stat-bubble" id="ragEmbedTag">Embed: all-MiniLM-L6-v2</span>
+          </div>
+        </div>
+
+        <!-- Chat History Transcript -->
+        <div id="ragTranscript" class="chat-transcript clay-well" role="log" aria-live="polite">
+          <div id="ragWelcomeState" class="welcome-card clay-card-subtle">
+            <div class="welcome-icon">✦</div>
+            <h3>Local Document Assistant</h3>
+            <p>
+              Ultron uses <strong>dense semantic embeddings</strong> (all-MiniLM-L6-v2, 384 dimensions) and 
+              <strong>cosine similarity</strong> over your private documents to answer questions with 
+              <strong>llama3:latest</strong> running completely offline via Ollama.
+            </p>
+            
+            <div class="conceptual-notice clay-well">
+              <span class="notice-icon">💡</span>
+              <div class="notice-body">
+                <strong>Architectural Note:</strong> Uploading documents creates semantic vectors stored in a local NumPy vector store. 
+                It provides grounding context during inference and does <em>NOT</em> alter or fine-tune model weights.
+              </div>
+            </div>
+
+            <div class="starter-suggestions">
+              <span class="suggestion-label">Sample queries once documents are uploaded:</span>
+              <div class="suggestion-pills">
+                <button type="button" class="clay-chip rag-chip" data-prompt="What is the parameter count of Ultron v0.2?">"Parameter count of Ultron v0.2"</button>
+                <button type="button" class="clay-chip rag-chip" data-prompt="What tokenizer does Ultron v0.2 use?">"Tokenizer details"</button>
+                <button type="button" class="clay-chip rag-chip" data-prompt="What model is used as the practical backend?">"Backend reasoning model"</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Chat Input Bar -->
+        <div class="input-console">
+          <label for="ragPromptInput" class="sr-only">Ask a question about your documents</label>
+          <div class="input-well-wrapper clay-well">
+            <textarea 
+              id="ragPromptInput" 
+              class="prompt-textarea" 
+              placeholder="Ask a question about your uploaded documents... Press Enter to ask Ultron"
+              rows="2"
+              maxlength="1000"
+            ></textarea>
+          </div>
+
+          <div class="input-actions-bar">
+            <div class="keyboard-tip">
+              <span class="kbd-hint"><kbd>Enter</kbd> to ask</span>
+              <span class="kbd-hint"><kbd>Shift</kbd> + <kbd>Enter</kbd> for newline</span>
+            </div>
+
+            <div class="action-buttons-group">
+              <button type="button" id="clearRagChatBtn" class="clay-btn secondary-btn" title="Clear chat history">
+                <span>↺</span> Clear Chat
+              </button>
+              <button type="button" id="ragSendBtn" class="clay-btn primary-btn">
+                <span class="btn-spinner hidden" id="ragBtnSpinner"></span>
+                <span class="btn-label" id="ragBtnLabel">
+                  <span class="action-icon">▶</span> Ask Ultron
+                </span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Right: Document Management & System Health -->
+      <aside class="controls-panel" aria-label="Knowledge Base & System Health">
+        
+        <!-- Document Upload Card -->
+        <div class="clay-card control-card">
+          <div class="card-head">
+            <h3 class="card-title">Upload Document</h3>
+            <span class="card-badge">Ingestion</span>
+          </div>
+          
+          <p class="section-instruction">
+            Add local documents to Ultron's semantic knowledge base:
+          </p>
+
+          <form id="uploadForm" class="upload-dropzone clay-well" enctype="multipart/form-data">
+            <input type="file" id="fileInput" name="file" accept=".txt,.md,.pdf" class="file-input-hidden">
+            <div class="dropzone-content" id="dropzoneContent">
+              <span class="upload-icon">📁</span>
+              <span class="dropzone-text">Click or drag file to upload</span>
+              <span class="supported-formats">Supported: <strong>.TXT</strong> • <strong>.MD</strong> • <strong>.PDF</strong></span>
+            </div>
+          </form>
+
+          <!-- Upload Status Indicator -->
+          <div id="uploadStatusBox" class="upload-status-box clay-card-subtle hidden">
+            <div class="status-stage-row">
+              <span class="pulse-spinner mini" id="uploadSpinner"></span>
+              <span id="uploadStatusText" class="upload-status-label">Uploading file...</span>
+            </div>
+            <div class="upload-progress-bar-wrap">
+              <div id="uploadProgressBar" class="upload-progress-bar"></div>
+            </div>
+          </div>
+
+          <div class="upload-actions">
+            <button type="button" id="uploadSubmitBtn" class="clay-btn primary-btn full-width" disabled>
+              <span>⬆</span> Index into Knowledge Base
+            </button>
+          </div>
+        </div>
+
+        <!-- Knowledge Base Registry Card -->
+        <div class="clay-card specs-card">
+          <div class="card-head">
+            <h3 class="card-title">Knowledge Base</h3>
+            <span id="docCountBadge" class="card-badge info">0 Documents</span>
+          </div>
+          
+          <div id="docListContainer" class="document-list-well clay-well">
+            <!-- Populated via JavaScript -->
+            <div id="emptyKbState" class="empty-kb-state">
+              <span class="empty-kb-icon">📖</span>
+              <p>Your knowledge base is empty.</p>
+              <span class="empty-kb-sub">Upload a document above to give Ultron local context.</span>
+            </div>
+          </div>
+
+          <div class="kb-footer-actions">
+            <button type="button" id="clearKbBtn" class="clay-btn danger-btn-subtle full-width">
+              <span>🗑</span> Clear Knowledge Base
+            </button>
+          </div>
+        </div>
+
+        <!-- System Health & Architecture Specs Card -->
+        <div class="clay-card vocab-card">
+          <div class="card-head">
+            <h3 class="card-title">System & Telemetry</h3>
+            <span class="card-badge subtle">Local AI</span>
+          </div>
+
+          <div class="specs-grid">
+            <div class="spec-cell clay-well">
+              <span class="spec-label">LLM ENGINE</span>
+              <strong id="telemetryModel" class="spec-value">llama3:latest</strong>
+            </div>
+            <div class="spec-cell clay-well">
+              <span class="spec-label">OLLAMA</span>
+              <strong id="telemetryOllama" class="spec-value">Checking...</strong>
+            </div>
+            <div class="spec-cell clay-well">
+              <span class="spec-label">EMBEDDINGS</span>
+              <strong id="telemetryEmbedder" class="spec-value">all-MiniLM-L6-v2</strong>
+            </div>
+            <div class="spec-cell clay-well">
+              <span class="spec-label">VECTOR DIM</span>
+              <strong id="telemetryDim" class="spec-value">384</strong>
+            </div>
+            <div class="spec-cell clay-well full-width">
+              <span class="spec-label">EMBEDDING HARDWARE</span>
+              <strong id="telemetryDevice" class="spec-value">Detecting...</strong>
+            </div>
+            <div class="spec-cell clay-well full-width">
+              <span class="spec-label">INDEXED CHUNKS</span>
+              <strong id="telemetryChunks" class="spec-value">0 chunks in memory</strong>
+            </div>
+          </div>
+
+          <div class="architecture-footnote">
+            <span>Vector Store: In-memory NumPy matrix + disk persistence. Metric: Cosine similarity.</span>
+          </div>
+        </div>
+
+      </aside>
+    </main>
+
+    <!-- ======================================================= -->
+    <!-- VIEW 2: v0.2 PYTORCH LAB (PRESERVED STEP 5-6 BASELINE)   -->
+    <!-- ======================================================= -->
+    <main id="labView" class="lab-grid hidden">
+      
+      <!-- Left: Interactive Chat & Inference Stage -->
+      <section class="playground-panel clay-card" aria-label="Ultron v0.2 Generation Playground">
+        <div class="panel-header">
+          <div class="panel-title-wrap">
+            <span class="panel-tag">EXPERIMENT STAGE</span>
+            <h2 class="panel-title">v0.2 Inference Console</h2>
+          </div>
+          <div class="session-stats">
+            <span class="stat-bubble">Checkpoint: v0.2 (TinyStories)</span>
+            <span class="stat-bubble">Context: 128 tokens</span>
+          </div>
+        </div>
+
+        <div id="chatTranscript" class="chat-transcript clay-well" role="log" aria-live="polite">
+          <div id="welcomeState" class="welcome-card clay-card-subtle">
+            <div class="welcome-icon">⚡</div>
+            <h3>Ultron v0.2 Laboratory</h3>
+            <p>
+              Ultron v0.2 is an expanded 4-layer Transformer trained on the <strong>TinyStories</strong> dataset
+              using <strong>Byte-Level BPE</strong> (1,323,728 parameters, 128 context tokens, 2,000 vocabulary).
+              Sample completions directly from the trained PyTorch checkpoint running on your hardware.
+            </p>
+            <div class="starter-suggestions">
+              <span class="suggestion-label">Quick sample prompts:</span>
+              <div class="suggestion-pills">
+                <button type="button" class="clay-chip lab-chip" data-prompt="Once upon a time">"Once upon a time"</button>
+                <button type="button" class="clay-chip lab-chip" data-prompt="A little boy">"A little boy"</button>
+                <button type="button" class="clay-chip lab-chip" data-prompt="One day, a cat">"One day, a cat"</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="input-console">
+          <label for="promptInput" class="sr-only">Prompt input</label>
+          <div class="input-well-wrapper clay-well">
+            <textarea 
+              id="promptInput" 
+              class="prompt-textarea" 
+              placeholder="Enter a story opening (e.g. 'Once upon a time', 'A little boy')... Press Enter to generate"
+              rows="2"
+              maxlength="500"
+            ></textarea>
+          </div>
+
+          <div class="input-actions-bar">
+            <div class="keyboard-tip">
+              <span class="kbd-hint"><kbd>Enter</kbd> to generate</span>
+              <span class="kbd-hint"><kbd>Shift</kbd> + <kbd>Enter</kbd> for new line</span>
+            </div>
+
+            <button type="button" id="generateBtn" class="clay-btn primary-btn">
+              <span class="btn-spinner hidden" id="btnSpinner"></span>
+              <span class="btn-label" id="btnLabel">
+                <span class="action-icon">▶</span> Generate
+              </span>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Right: Hyperparameters & Telemetry -->
+      <aside class="controls-panel" aria-label="Model Parameters and System Telemetry">
+        <div class="clay-card control-card">
+          <div class="card-head">
+            <h3 class="card-title">Hyperparameters</h3>
+            <span class="card-badge">Sampling</span>
+          </div>
+
+          <div class="control-group">
+            <div class="control-label-row">
+              <label for="tempSlider" class="control-label">Temperature</label>
+              <span id="tempValue" class="value-badge clay-badge">0.80</span>
+            </div>
+            <div class="slider-trough clay-well">
+              <input type="range" id="tempSlider" min="0.1" max="2.0" step="0.05" value="0.8" class="clay-range">
+            </div>
+            <div class="range-labels">
+              <span>0.1 (Focused)</span>
+              <span>0.8 (Default)</span>
+              <span>2.0 (Diverse)</span>
+            </div>
+          </div>
+
+          <div class="control-group">
+            <div class="control-label-row">
+              <label for="tokensSlider" class="control-label">Max New Tokens</label>
+              <span id="tokensValue" class="value-badge clay-badge">100</span>
+            </div>
+            <div class="slider-trough clay-well">
+              <input type="range" id="tokensSlider" min="10" max="250" step="5" value="100" class="clay-range">
+            </div>
+            <div class="range-labels">
+              <span>10 tokens</span>
+              <span>100</span>
+              <span>250 tokens</span>
+            </div>
+          </div>
+
+          <div class="control-actions">
+            <button type="button" id="clearChatBtn" class="clay-btn secondary-btn full-width">
+              <span>↺</span> Clear Conversation
+            </button>
+          </div>
+        </div>
+
+        <div class="clay-card specs-card">
+          <div class="card-head">
+            <h3 class="card-title">Technical Information</h3>
+            <span class="card-badge info">Active Spec</span>
+          </div>
+          <p class="specs-intro">Physical metrics of active PyTorch v0.2 checkpoint:</p>
+
+          <div class="specs-grid">
+            <div class="spec-cell clay-well">
+              <span class="spec-label">MODEL</span>
+              <strong id="specModel" class="spec-value">Ultron</strong>
+            </div>
+            <div class="spec-cell clay-well">
+              <span class="spec-label">VERSION</span>
+              <strong id="specVersion" class="spec-value">v0.2</strong>
+            </div>
+            <div class="spec-cell clay-well">
+              <span class="spec-label">VOCABULARY</span>
+              <strong id="specVocab" class="spec-value">2,000</strong>
+            </div>
+            <div class="spec-cell clay-well">
+              <span class="spec-label">CONTEXT</span>
+              <strong id="specContext" class="spec-value">128</strong>
+            </div>
+            <div class="spec-cell clay-well full-width">
+              <span class="spec-label">PARAMETERS</span>
+              <strong id="specParams" class="spec-value">1,323,728</strong>
+            </div>
+            <div class="spec-cell clay-well full-width">
+              <span class="spec-label">COMPUTE DEVICE</span>
+              <strong id="specDevice" class="spec-value">Detecting...</strong>
+            </div>
+          </div>
+
+          <div class="architecture-footnote">
+            <span id="specArch">Structure: 4 Layers • 4 Heads • 128 Dim • 128 Context</span>
+          </div>
+        </div>
+      </aside>
+    </main>
+
+    <!-- Footer -->
+    <footer class="lab-footer">
+      <span>Ultron Local AI Assistant & Laboratory • llama3:latest + all-MiniLM-L6-v2 • v0.2 TinyStories</span>
+    </footer>
+
+  </div>
+
+  <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>
