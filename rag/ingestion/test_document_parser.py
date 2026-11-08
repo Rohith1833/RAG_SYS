@@ -1,5 +1,6 @@
 import sys
 import tempfile
+import zipfile
 from pathlib import Path
 import pypdf
 
@@ -94,9 +95,36 @@ def test_pdf_parsing():
             assert False, "Should have raised ValueError on PDF with no extractable text"
         except ValueError as err:
             assert "No extractable text found" in str(err)
-            print("  [PASS] Empty/blank PDF correctly detected and rejected.")
+            assert "OCR" in str(err)
+            print("  [PASS] Empty/scanned PDF correctly detected with OCR guidance.")
     finally:
         temp_blank.unlink()
+
+
+def test_docx_parsing():
+    print("Testing DOCX parsing...")
+    docx_xml = (
+        '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n'
+        '<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">\n'
+        '  <w:body>\n'
+        '    <w:p><w:r><w:t>Ultron Word Document Integration Test.</w:t></w:r></w:p>\n'
+        '    <w:p><w:r><w:t>Second paragraph discussing RAG architecture.</w:t></w:r></w:p>\n'
+        '  </w:body>\n'
+        '</w:document>'
+    )
+    with tempfile.NamedTemporaryFile(suffix=".docx", mode="wb", delete=False) as f:
+        with zipfile.ZipFile(f, "w") as zf:
+            zf.writestr("word/document.xml", docx_xml.encode("utf-8"))
+        temp_path = Path(f.name)
+
+    try:
+        segments = DocumentParser.parse(temp_path)
+        assert len(segments) == 1
+        assert "Ultron Word Document Integration Test." in segments[0]["text"]
+        assert "Second paragraph discussing RAG architecture." in segments[0]["text"]
+        print("  [PASS] DOCX parsed successfully.")
+    finally:
+        temp_path.unlink()
 
 
 def test_empty_file():
@@ -140,6 +168,7 @@ def main():
     test_txt_parsing()
     test_md_parsing()
     test_pdf_parsing()
+    test_docx_parsing()
     test_empty_file()
     test_unsupported_extension()
     print("=" * 60)

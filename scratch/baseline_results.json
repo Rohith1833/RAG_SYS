@@ -1,0 +1,13 @@
+{
+  "conn_ms": 2.269000000524102,
+  "general_total_s": 6.009240799998224,
+  "general_tps": 11.465674665595088,
+  "embedder_load_ms": 5774.519700000383,
+  "single_embed_ms": 148.9789999977802,
+  "batch_embed_ms": 49.615399999311194,
+  "retrieval_ms": 34.50989999691956,
+  "rag_total_s": 22.273609600000782,
+  "rag_tps": 9.922055920383567,
+  "process_ram_mb": 0.0,
+  "pytorch_vram_mb": 94.77685546875
+}

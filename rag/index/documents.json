@@ -18,5 +18,71 @@
     "file_size": 9831391,
     "status": "indexed",
     "uploaded_at": "2026-09-14 20:32:30"
+  },
+  "doc_ead62cc0d9": {
+    "document_id": "doc_ead62cc0d9",
+    "filename": "scenario_manual.pdf",
+    "file_hash": "2d1b0d3801e4e60150c2f3e0d135478b9014ec4e31a43a77f69d8571aa53ba38",
+    "stored_path": "C:\\Users\\rohit\\Downloads\\ALL projects\\Ultron\\rag\\uploads\\doc_ead62cc0d9_scenario_manual.pdf",
+    "file_type": "pdf",
+    "number_of_chunks": 1,
+    "file_size": 642,
+    "status": "indexed",
+    "uploaded_at": "2026-11-08 18:33:00"
+  },
+  "doc_ee0ec43de8": {
+    "document_id": "doc_ee0ec43de8",
+    "filename": "scenario_guide.md",
+    "file_hash": "67d616b356b8c21d18d2eb78f9a1a68effab761820ed8a5e1e9fbd8880fe1806",
+    "stored_path": "C:\\Users\\rohit\\Downloads\\ALL projects\\Ultron\\rag\\uploads\\doc_ee0ec43de8_scenario_guide.md",
+    "file_type": "md",
+    "number_of_chunks": 1,
+    "file_size": 236,
+    "status": "indexed",
+    "uploaded_at": "2026-11-08 18:33:07"
+  },
+  "doc_5a18a5822d": {
+    "document_id": "doc_5a18a5822d",
+    "filename": "scenario_long_spec.txt",
+    "file_hash": "e84b787d053306178e24c80afb3bd4538d8a6aad54341a627c62962786b3cbdc",
+    "stored_path": "C:\\Users\\rohit\\Downloads\\ALL projects\\Ultron\\rag\\uploads\\doc_5a18a5822d_scenario_long_spec.txt",
+    "file_type": "txt",
+    "number_of_chunks": 21,
+    "file_size": 8454,
+    "status": "indexed",
+    "uploaded_at": "2026-11-08 18:33:32"
+  },
+  "doc_9e674db63e": {
+    "document_id": "doc_9e674db63e",
+    "filename": "alpha.txt",
+    "file_hash": "7b7044ab73ebee4bb27dbaeb71b0d219921095773cff8c3fd7bbbe258c55525a",
+    "stored_path": "C:\\Users\\rohit\\Downloads\\ALL projects\\Ultron\\rag\\uploads\\doc_9e674db63e_alpha.txt",
+    "file_type": "txt",
+    "number_of_chunks": 1,
+    "file_size": 54,
+    "status": "indexed",
+    "uploaded_at": "2026-11-08 18:34:44"
+  },
+  "doc_4fba81cf66": {
+    "document_id": "doc_4fba81cf66",
+    "filename": "beta.txt",
+    "file_hash": "2988c51eb2ba0d9a4b9c8b6d9456c0f59a14536d50de0e8e458d5107f3ee0f65",
+    "stored_path": "C:\\Users\\rohit\\Downloads\\ALL projects\\Ultron\\rag\\uploads\\doc_4fba81cf66_beta.txt",
+    "file_type": "txt",
+    "number_of_chunks": 1,
+    "file_size": 56,
+    "status": "indexed",
+    "uploaded_at": "2026-11-08 18:34:44"
+  },
+  "doc_3d28e0e722": {
+    "document_id": "doc_3d28e0e722",
+    "filename": "offline_doc.txt",
+    "file_hash": "e11793cd5471e29551526f7a1fc7b78ee3a4bf135c4676513d9bcab292592568",
+    "stored_path": "C:\\Users\\rohit\\Downloads\\ALL projects\\Ultron\\rag\\uploads\\doc_3d28e0e722_offline_doc.txt",
+    "file_type": "txt",
+    "number_of_chunks": 1,
+    "file_size": 46,
+    "status": "indexed",
+    "uploaded_at": "2026-11-08 18:35:01"
   }
 }

@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ULTRON — Local AI Assistant & Laboratory</title>
-  <meta name="description" content="Local AI assistant with semantic RAG retrieval powered by llama3:latest and all-MiniLM-L6-v2, alongside Ultron v0.2 TinyStories PyTorch model.">
+  <meta name="description" content="Local AI assistant with general chat and semantic RAG retrieval powered by llama3:latest and all-MiniLM-L6-v2, alongside Ultron v0.2 TinyStories PyTorch model.">
   
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -24,14 +24,14 @@
         </div>
         <div class="brand-text">
           <h1 class="brand-title">ULTRON <span class="version-tag">AI ASSISTANT</span></h1>
-          <p class="brand-subtitle">Local RAG Knowledge Engine • llama3:latest • all-MiniLM-L6-v2</p>
+          <p class="brand-subtitle">General Chat • Semantic RAG • llama3:latest • all-MiniLM-L6-v2</p>
         </div>
       </div>
 
       <!-- Mode Switcher Tabs -->
       <nav class="mode-nav-tabs" aria-label="Application Modes">
         <button type="button" class="nav-tab active" id="tabRagBtn" data-target="ragView">
-          <span class="tab-icon">✦</span> Local RAG Assistant
+          <span class="tab-icon">✦</span> Ultron Assistant
         </button>
         <button type="button" class="nav-tab" id="tabLabBtn" data-target="labView">
           <span class="tab-icon">⚡</span> v0.2 PyTorch Lab
@@ -55,16 +55,59 @@
     </div>
 
     <!-- ======================================================= -->
-    <!-- VIEW 1: LOCAL RAG ASSISTANT (STEP 10 INTEGRATION)       -->
+    <!-- VIEW 1: ULTRON LOCAL ASSISTANT & RAG                    -->
     <!-- ======================================================= -->
-    <main id="ragView" class="lab-grid active-view">
+    <main id="ragView" class="lab-grid active-view tri-layout">
       
-      <!-- Left: Grounded RAG Chat Stage -->
-      <section class="playground-panel clay-card" aria-label="Ultron Local RAG Assistant">
+      <!-- LEFT: Sidebar (Conversations, Mode, Settings) -->
+      <aside class="sidebar-panel clay-card" aria-label="Conversation History & Settings">
+        <div class="sidebar-header">
+          <button type="button" id="newChatBtn" class="clay-btn primary-btn full-width">
+            <span>+</span> New Chat
+          </button>
+        </div>
+
+        <!-- Mode Toggle in Sidebar -->
+        <div class="sidebar-mode-section">
+          <span class="sidebar-subhead">CHAT MODE</span>
+          <div class="chat-mode-pill-toggle clay-well">
+            <button type="button" class="mode-pill-opt active" id="modeOptRag" data-mode="rag" title="Answer questions strictly grounded in your uploaded documents">
+              <span>✦</span> Document RAG
+            </button>
+            <button type="button" class="mode-pill-opt" id="modeOptGeneral" data-mode="general" title="General conversational AI without document retrieval">
+              <span>💬</span> General Chat
+            </button>
+          </div>
+        </div>
+
+        <!-- Saved Conversations List -->
+        <div class="sidebar-conv-section">
+          <div class="conv-section-title-row">
+            <span class="sidebar-subhead">CONVERSATIONS</span>
+            <span id="convCountBadge" class="sidebar-count-chip">0</span>
+          </div>
+          <div id="convListContainer" class="conv-list-well clay-well">
+            <div id="emptyConvState" class="empty-conv-state">
+              <span>💬</span>
+              <p>No conversations yet.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sidebar Footer Actions -->
+        <div class="sidebar-footer">
+          <button type="button" id="openSettingsBtn" class="clay-btn secondary-btn full-width">
+            <span>⚙️</span> Settings
+          </button>
+        </div>
+      </aside>
+
+      <!-- CENTER: Main Chat Stage -->
+      <section class="playground-panel clay-card" aria-label="Ultron Chat Stage">
         <div class="panel-header">
           <div class="panel-title-wrap">
-            <span class="panel-tag">GROUNDED REASONING</span>
-            <h2 class="panel-title">Knowledge Assistant</h2>
+            <span class="panel-tag" id="activeModeBadge">DOCUMENT RAG</span>
+            <h2 class="panel-title" id="activeConvTitle">Ultron Assistant</h2>
           </div>
           <div class="session-stats">
             <span class="stat-bubble" id="ragModelTag">LLM: llama3:latest</span>
@@ -76,59 +119,67 @@
         <div id="ragTranscript" class="chat-transcript clay-well" role="log" aria-live="polite">
           <div id="ragWelcomeState" class="welcome-card clay-card-subtle">
             <div class="welcome-icon">✦</div>
-            <h3>Local Document Assistant</h3>
-            <p>
-              Ultron uses <strong>dense semantic embeddings</strong> (all-MiniLM-L6-v2, 384 dimensions) and 
-              <strong>cosine similarity</strong> over your private documents to answer questions with 
-              <strong>llama3:latest</strong> running completely offline via Ollama.
+            <h3 id="welcomeHeading">Ultron Local AI Assistant</h3>
+            <p id="welcomeDescription">
+              Ultron is your local intelligence system. You can chat freely in <strong>General Chat mode</strong> 
+              (coding, explanations, creative tasks) or ask questions about private files in <strong>Document RAG mode</strong> 
+              using dense semantic retrieval (<strong>all-MiniLM-L6-v2</strong>) and <strong>llama3:latest</strong>.
             </p>
             
             <div class="conceptual-notice clay-well">
               <span class="notice-icon">💡</span>
               <div class="notice-body">
-                <strong>Architectural Note:</strong> Uploading documents creates semantic vectors stored in a local NumPy vector store. 
-                It provides grounding context during inference and does <em>NOT</em> alter or fine-tune model weights.
+                <strong>Mode Awareness:</strong> Toggle between <em>Document RAG</em> (knowledge retrieval) 
+                and <em>General Chat</em> (freeform LLM dialogue) using the mode selector in the sidebar or above the input bar.
               </div>
             </div>
 
             <div class="starter-suggestions">
-              <span class="suggestion-label">Sample queries once documents are uploaded:</span>
+              <span class="suggestion-label">Suggested prompts to get started:</span>
               <div class="suggestion-pills">
-                <button type="button" class="clay-chip rag-chip" data-prompt="What is the parameter count of Ultron v0.2?">"Parameter count of Ultron v0.2"</button>
-                <button type="button" class="clay-chip rag-chip" data-prompt="What tokenizer does Ultron v0.2 use?">"Tokenizer details"</button>
-                <button type="button" class="clay-chip rag-chip" data-prompt="What model is used as the practical backend?">"Backend reasoning model"</button>
+                <button type="button" class="clay-chip rag-chip" data-prompt="What is Ultron and how is it architected?">"What is Ultron?"</button>
+                <button type="button" class="clay-chip rag-chip" data-prompt="Explain how self-attention works in a Transformer.">"Explain self-attention"</button>
+                <button type="button" class="clay-chip rag-chip" data-prompt="Write a Python script to compute cosine similarity using NumPy.">"Python cosine similarity"</button>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- Chat Input Bar -->
+        <!-- Chat Input Console -->
         <div class="input-console">
-          <label for="ragPromptInput" class="sr-only">Ask a question about your documents</label>
+          <!-- Active Mode & Input Controls Bar -->
+          <div class="input-mode-indicator-bar">
+            <span class="active-mode-pill-tag" id="inputModePillTag">
+              <span class="pill-dot"></span> Mode: Document RAG
+            </span>
+            <span class="model-online-pill" id="inputModelPill">Ollama (llama3:latest)</span>
+          </div>
+
+          <label for="ragPromptInput" class="sr-only">Type a message to Ultron</label>
           <div class="input-well-wrapper clay-well">
             <textarea 
               id="ragPromptInput" 
               class="prompt-textarea" 
-              placeholder="Ask a question about your uploaded documents... Press Enter to ask Ultron"
+              placeholder="Ask anything or query your uploaded documents... Press Enter to send"
               rows="2"
-              maxlength="1000"
+              maxlength="2000"
             ></textarea>
           </div>
 
           <div class="input-actions-bar">
             <div class="keyboard-tip">
-              <span class="kbd-hint"><kbd>Enter</kbd> to ask</span>
+              <span class="kbd-hint"><kbd>Enter</kbd> to send</span>
               <span class="kbd-hint"><kbd>Shift</kbd> + <kbd>Enter</kbd> for newline</span>
             </div>
 
             <div class="action-buttons-group">
-              <button type="button" id="clearRagChatBtn" class="clay-btn secondary-btn" title="Clear chat history">
+              <button type="button" id="clearRagChatBtn" class="clay-btn secondary-btn" title="Clear current messages">
                 <span>↺</span> Clear Chat
               </button>
               <button type="button" id="ragSendBtn" class="clay-btn primary-btn">
                 <span class="btn-spinner hidden" id="ragBtnSpinner"></span>
                 <span class="btn-label" id="ragBtnLabel">
-                  <span class="action-icon">▶</span> Ask Ultron
+                  <span class="action-icon">▶</span> Send
                 </span>
               </button>
             </div>
@@ -136,7 +187,7 @@
         </div>
       </section>
 
-      <!-- Right: Document Management & System Health -->
+      <!-- RIGHT: Knowledge Base & System Health -->
       <aside class="controls-panel" aria-label="Knowledge Base & System Health">
         
         <!-- Document Upload Card -->
@@ -147,15 +198,15 @@
           </div>
           
           <p class="section-instruction">
-            Add local documents to Ultron's semantic knowledge base:
+            Add documents to Ultron's knowledge base:
           </p>
 
           <form id="uploadForm" class="upload-dropzone clay-well" enctype="multipart/form-data">
-            <input type="file" id="fileInput" name="file" accept=".txt,.md,.pdf" class="file-input-hidden">
+            <input type="file" id="fileInput" name="file" accept=".txt,.md,.pdf,.docx" class="file-input-hidden">
             <div class="dropzone-content" id="dropzoneContent">
               <span class="upload-icon">📁</span>
               <span class="dropzone-text">Click or drag file to upload</span>
-              <span class="supported-formats">Supported: <strong>.TXT</strong> • <strong>.MD</strong> • <strong>.PDF</strong></span>
+              <span class="supported-formats">Supported: <strong>.TXT</strong> • <strong>.MD</strong> • <strong>.PDF</strong> • <strong>.DOCX</strong></span>
             </div>
           </form>
 
@@ -185,11 +236,10 @@
           </div>
           
           <div id="docListContainer" class="document-list-well clay-well">
-            <!-- Populated via JavaScript -->
             <div id="emptyKbState" class="empty-kb-state">
               <span class="empty-kb-icon">📖</span>
-              <p>Your knowledge base is empty.</p>
-              <span class="empty-kb-sub">Upload a document above to give Ultron local context.</span>
+              <p>Knowledge base is empty.</p>
+              <span class="empty-kb-sub">Upload a document above to provide context for RAG.</span>
             </div>
           </div>
 
@@ -200,7 +250,7 @@
           </div>
         </div>
 
-        <!-- System Health & Architecture Specs Card -->
+        <!-- System Health & Telemetry Card -->
         <div class="clay-card vocab-card">
           <div class="card-head">
             <h3 class="card-title">System & Telemetry</h3>
@@ -225,7 +275,7 @@
               <strong id="telemetryDim" class="spec-value">384</strong>
             </div>
             <div class="spec-cell clay-well full-width">
-              <span class="spec-label">EMBEDDING HARDWARE</span>
+              <span class="spec-label">COMPUTE HARDWARE</span>
               <strong id="telemetryDevice" class="spec-value">Detecting...</strong>
             </div>
             <div class="spec-cell clay-well full-width">
@@ -235,7 +285,7 @@
           </div>
 
           <div class="architecture-footnote">
-            <span>Vector Store: In-memory NumPy matrix + disk persistence. Metric: Cosine similarity.</span>
+            <span>Storage: In-memory NumPy matrix + disk persistence. Metric: Cosine similarity + keyword boost.</span>
           </div>
         </div>
 
@@ -243,7 +293,7 @@
     </main>
 
     <!-- ======================================================= -->
-    <!-- VIEW 2: v0.2 PYTORCH LAB (PRESERVED STEP 5-6 BASELINE)   -->
+    <!-- VIEW 2: v0.2 PYTORCH LAB (PRESERVED BASELINE)           -->
     <!-- ======================================================= -->
     <main id="labView" class="lab-grid hidden">
       
@@ -393,6 +443,136 @@
         </div>
       </aside>
     </main>
+
+    <!-- ======================================================= -->
+    <!-- MODAL 1: DOCUMENT SUMMARIZATION MODAL                   -->
+    <!-- ======================================================= -->
+    <div id="summarizeModal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="summarizeModalTitle">
+      <div class="modal-card clay-card">
+        <div class="modal-header">
+          <div class="modal-title-wrap">
+            <span class="panel-tag">DOCUMENT INTELLIGENCE</span>
+            <h3 id="summarizeModalTitle" class="modal-title">Summarize Document</h3>
+          </div>
+          <button type="button" id="closeSummarizeModal" class="modal-close-btn" aria-label="Close modal">✕</button>
+        </div>
+
+        <div class="modal-body">
+          <div class="summary-doc-info clay-well">
+            <span class="doc-icon">📄</span>
+            <span id="summaryDocName" class="summary-doc-name">Document Title</span>
+          </div>
+
+          <div class="summary-style-picker">
+            <label class="control-label">Summary Depth & Style:</label>
+            <div class="style-options-grid">
+              <button type="button" class="style-option-btn active" data-style="detailed">
+                <strong>Detailed</strong>
+                <span>Multi-section comprehensive analysis</span>
+              </button>
+              <button type="button" class="style-option-btn" data-style="short">
+                <strong>Executive Short</strong>
+                <span>2-3 paragraph core synthesis</span>
+              </button>
+              <button type="button" class="style-option-btn" data-style="key_points">
+                <strong>Key Points</strong>
+                <span>Structured bullet points & takeaways</span>
+              </button>
+            </div>
+          </div>
+
+          <div id="summaryProgressBox" class="summary-progress-box clay-card-subtle hidden">
+            <div class="status-stage-row">
+              <span class="pulse-spinner mini"></span>
+              <span id="summaryProgressText" class="upload-status-label">Extracting document sections...</span>
+            </div>
+          </div>
+
+          <div id="summaryResultContainer" class="summary-result-container clay-well hidden">
+            <div class="summary-result-head">
+              <span class="summary-result-label">Generated Summary:</span>
+              <button type="button" id="copySummaryBtn" class="action-pill-btn">Copy Summary</button>
+            </div>
+            <div id="summaryResultContent" class="summary-result-content"></div>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" id="startSummarizeBtn" class="clay-btn primary-btn">
+            <span>✨</span> Generate Complete Summary
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ======================================================= -->
+    <!-- MODAL 2: APPLICATION SETTINGS MODAL                     -->
+    <!-- ======================================================= -->
+    <div id="settingsModal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="settingsModalTitle">
+      <div class="modal-card clay-card">
+        <div class="modal-header">
+          <div class="modal-title-wrap">
+            <span class="panel-tag">CONFIGURATION</span>
+            <h3 id="settingsModalTitle" class="modal-title">Ultron Settings</h3>
+          </div>
+          <button type="button" id="closeSettingsModal" class="modal-close-btn" aria-label="Close modal">✕</button>
+        </div>
+
+        <div class="modal-body">
+          <div class="control-group">
+            <label for="settingModelInput" class="control-label">Ollama Model</label>
+            <div class="clay-well">
+              <input type="text" id="settingModelInput" class="setting-text-input" value="llama3:latest">
+            </div>
+          </div>
+
+          <div class="control-group">
+            <div class="control-label-row">
+              <label for="settingTempSlider" class="control-label">Temperature</label>
+              <span id="settingTempValue" class="value-badge clay-badge">0.70</span>
+            </div>
+            <div class="slider-trough clay-well">
+              <input type="range" id="settingTempSlider" min="0.1" max="1.5" step="0.05" value="0.7" class="clay-range">
+            </div>
+          </div>
+
+          <div class="control-group">
+            <div class="control-label-row">
+              <label for="settingTopKSlider" class="control-label">Retrieval Top-K Chunks</label>
+              <span id="settingTopKValue" class="value-badge clay-badge">3</span>
+            </div>
+            <div class="slider-trough clay-well">
+              <input type="range" id="settingTopKSlider" min="1" max="10" step="1" value="3" class="clay-range">
+            </div>
+          </div>
+
+          <div class="control-group">
+            <div class="control-label-row">
+              <label for="settingThresholdSlider" class="control-label">Min Relevance Threshold</label>
+              <span id="settingThresholdValue" class="value-badge clay-badge">0.20</span>
+            </div>
+            <div class="slider-trough clay-well">
+              <input type="range" id="settingThresholdSlider" min="0.0" max="0.8" step="0.05" value="0.20" class="clay-range">
+            </div>
+          </div>
+
+          <div class="control-group">
+            <label class="control-label">GPU Hardware & VRAM</label>
+            <div style="display: flex; gap: 8px; align-items: center; margin-top: 6px;">
+              <button type="button" id="unloadModelBtn" class="clay-btn" style="flex: 1; padding: 8px 12px; font-size: 0.85rem;">
+                <span>⚡</span> Release Llama 3 from GPU VRAM
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" id="saveSettingsBtn" class="clay-btn primary-btn">
+            <span>💾</span> Save Settings
+          </button>
+        </div>
+      </div>
+    </div>
 
     <!-- Footer -->
     <footer class="lab-footer">

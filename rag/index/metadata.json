@@ -1462,7 +1462,33 @@
     "telligence. If\nyou want to operate on the right side, the B- and I-quadrant\nside, you must be smarter than if you choose to stay on the\nleft side, the E- and S-quadrant side. To be a B or I, you\nmust be able to control the direction of your cash ﬂow.\nThis book is written for people who are ready to make\nchanges in their lives to move beyond job security and\nbegin to build their own pipelines to achieve ﬁnancial\nfreedom.\nWe are in the Information Age which oﬀers more\nopportunities for ﬁnancial re",
     "hieve ﬁnancial\nfreedom.\nWe are in the Information Age which oﬀers more\nopportunities for ﬁnancial reward than ever before.\nIndividuals with the skills of the B’s and I’s will be able to\nidentify and seize those opportunities. To be successful in\nthe Information Age, a person needs information from all\nfour quadrants. Unfortunately, our schools are still in the\nIndustrial Age and still prepare students for only the left\nside of the CASHFLOW Quadrant.",
     "If you’re looking for new answers to move forward in the\nInformation Age, this book is for you. It doesn’t have all the\nanswers, but it will share the deep personal and guiding\ninsights I gained as I traveled from the E and S side to the\nB and I side.",
-    "My Environment…\nThe six adults I spend the most time with are:"
+    "My Environment…\nThe six adults I spend the most time with are:",
+    "Ultron Architecture: Ingestion is decoupled from Ollama generation.",
+    "# Ultron Technical Overview\n\n## Component 1: Custom PyTorch BPE Model\nUltron includes a 1.3M parameter model trained on TinyStories.\n\n## Component 2: RAG Pipeline\nSemantic search uses 384-dimensional dense vectors and cosine similarity.",
+    "Chapter 1: System Engineering Deep Dive. This section discusses layer normalization, residual connections, multi-head self-attention mechanisms, and feed-forward neural layers. Ultron maintains complete execution sovereignty on the host GPU without network calls. Chapter 1: System Engineering Deep Dive. This section discusses layer normalization, residual connections, multi-head self-attention mechanisms, and feed-forward neural layers. Ultron maintains complete execution sovereignty on the host",
+    "hanisms, and feed-forward neural layers. Ultron maintains complete execution sovereignty on the host GPU without network calls. Chapter 1: System Engineering Deep Dive. This section discusses layer normalization, residual connections, multi-head self-attention mechanisms, and feed-forward neural layers. Ultron maintains complete execution sovereignty on the host GPU without network calls. Chapter 1: System Engineering Deep Dive. This section discusses layer normalization, residual connections, m",
+    "1: System Engineering Deep Dive. This section discusses layer normalization, residual connections, multi-head self-attention mechanisms, and feed-forward neural layers. Ultron maintains complete execution sovereignty on the host GPU without network calls. Chapter 1: System Engineering Deep Dive. This section discusses layer normalization, residual connections, multi-head self-attention mechanisms, and feed-forward neural layers. Ultron maintains complete execution sovereignty on the host GPU wit",
+    "and feed-forward neural layers. Ultron maintains complete execution sovereignty on the host GPU without network calls. Chapter 1: System Engineering Deep Dive. This section discusses layer normalization, residual connections, multi-head self-attention mechanisms, and feed-forward neural layers. Ultron maintains complete execution sovereignty on the host GPU without network calls. Chapter 1: System Engineering Deep Dive. This section discusses layer normalization, residual connections, multi-hea",
+    "m Engineering Deep Dive. This section discusses layer normalization, residual connections, multi-head self-attention mechanisms, and feed-forward neural layers. Ultron maintains complete execution sovereignty on the host GPU without network calls. Chapter 1: System Engineering Deep Dive. This section discusses layer normalization, residual connections, multi-head self-attention mechanisms, and feed-forward neural layers. Ultron maintains complete execution sovereignty on the host GPU without net",
+    "d-forward neural layers. Ultron maintains complete execution sovereignty on the host GPU without network calls. \n\nChapter 2: System Engineering Deep Dive. This section discusses layer normalization, residual connections, multi-head self-attention mechanisms, and feed-forward neural layers. Ultron maintains complete execution sovereignty on the host GPU without network calls. Chapter 2: System Engineering Deep Dive. This section discusses layer normalization, residual connections, multi-head self",
+    "neering Deep Dive. This section discusses layer normalization, residual connections, multi-head self-attention mechanisms, and feed-forward neural layers. Ultron maintains complete execution sovereignty on the host GPU without network calls. Chapter 2: System Engineering Deep Dive. This section discusses layer normalization, residual connections, multi-head self-attention mechanisms, and feed-forward neural layers. Ultron maintains complete execution sovereignty on the host GPU without network c",
+    "ard neural layers. Ultron maintains complete execution sovereignty on the host GPU without network calls. Chapter 2: System Engineering Deep Dive. This section discusses layer normalization, residual connections, multi-head self-attention mechanisms, and feed-forward neural layers. Ultron maintains complete execution sovereignty on the host GPU without network calls. Chapter 2: System Engineering Deep Dive. This section discusses layer normalization, residual connections, multi-head self-attenti",
+    "Deep Dive. This section discusses layer normalization, residual connections, multi-head self-attention mechanisms, and feed-forward neural layers. Ultron maintains complete execution sovereignty on the host GPU without network calls. Chapter 2: System Engineering Deep Dive. This section discusses layer normalization, residual connections, multi-head self-attention mechanisms, and feed-forward neural layers. Ultron maintains complete execution sovereignty on the host GPU without network calls. Ch",
+    "al layers. Ultron maintains complete execution sovereignty on the host GPU without network calls. Chapter 2: System Engineering Deep Dive. This section discusses layer normalization, residual connections, multi-head self-attention mechanisms, and feed-forward neural layers. Ultron maintains complete execution sovereignty on the host GPU without network calls. Chapter 2: System Engineering Deep Dive. This section discusses layer normalization, residual connections, multi-head self-attention mecha",
+    "e. This section discusses layer normalization, residual connections, multi-head self-attention mechanisms, and feed-forward neural layers. Ultron maintains complete execution sovereignty on the host GPU without network calls. \n\nChapter 3: System Engineering Deep Dive. This section discusses layer normalization, residual connections, multi-head self-attention mechanisms, and feed-forward neural layers. Ultron maintains complete execution sovereignty on the host GPU without network calls. Chapter",
+    "ers. Ultron maintains complete execution sovereignty on the host GPU without network calls. Chapter 3: System Engineering Deep Dive. This section discusses layer normalization, residual connections, multi-head self-attention mechanisms, and feed-forward neural layers. Ultron maintains complete execution sovereignty on the host GPU without network calls. Chapter 3: System Engineering Deep Dive. This section discusses layer normalization, residual connections, multi-head self-attention mechanisms,",
+    "s section discusses layer normalization, residual connections, multi-head self-attention mechanisms, and feed-forward neural layers. Ultron maintains complete execution sovereignty on the host GPU without network calls. Chapter 3: System Engineering Deep Dive. This section discusses layer normalization, residual connections, multi-head self-attention mechanisms, and feed-forward neural layers. Ultron maintains complete execution sovereignty on the host GPU without network calls. Chapter 3: Syste",
+    "ron maintains complete execution sovereignty on the host GPU without network calls. Chapter 3: System Engineering Deep Dive. This section discusses layer normalization, residual connections, multi-head self-attention mechanisms, and feed-forward neural layers. Ultron maintains complete execution sovereignty on the host GPU without network calls. Chapter 3: System Engineering Deep Dive. This section discusses layer normalization, residual connections, multi-head self-attention mechanisms, and fee",
+    "n discusses layer normalization, residual connections, multi-head self-attention mechanisms, and feed-forward neural layers. Ultron maintains complete execution sovereignty on the host GPU without network calls. Chapter 3: System Engineering Deep Dive. This section discusses layer normalization, residual connections, multi-head self-attention mechanisms, and feed-forward neural layers. Ultron maintains complete execution sovereignty on the host GPU without network calls. Chapter 3: System Engine",
+    "tains complete execution sovereignty on the host GPU without network calls. Chapter 3: System Engineering Deep Dive. This section discusses layer normalization, residual connections, multi-head self-attention mechanisms, and feed-forward neural layers. Ultron maintains complete execution sovereignty on the host GPU without network calls. \n\nChapter 4: System Engineering Deep Dive. This section discusses layer normalization, residual connections, multi-head self-attention mechanisms, and feed-forw",
+    "usses layer normalization, residual connections, multi-head self-attention mechanisms, and feed-forward neural layers. Ultron maintains complete execution sovereignty on the host GPU without network calls. Chapter 4: System Engineering Deep Dive. This section discusses layer normalization, residual connections, multi-head self-attention mechanisms, and feed-forward neural layers. Ultron maintains complete execution sovereignty on the host GPU without network calls. Chapter 4: System Engineering",
+    "complete execution sovereignty on the host GPU without network calls. Chapter 4: System Engineering Deep Dive. This section discusses layer normalization, residual connections, multi-head self-attention mechanisms, and feed-forward neural layers. Ultron maintains complete execution sovereignty on the host GPU without network calls. Chapter 4: System Engineering Deep Dive. This section discusses layer normalization, residual connections, multi-head self-attention mechanisms, and feed-forward neur",
+    "yer normalization, residual connections, multi-head self-attention mechanisms, and feed-forward neural layers. Ultron maintains complete execution sovereignty on the host GPU without network calls. Chapter 4: System Engineering Deep Dive. This section discusses layer normalization, residual connections, multi-head self-attention mechanisms, and feed-forward neural layers. Ultron maintains complete execution sovereignty on the host GPU without network calls. Chapter 4: System Engineering Deep Div",
+    "execution sovereignty on the host GPU without network calls. Chapter 4: System Engineering Deep Dive. This section discusses layer normalization, residual connections, multi-head self-attention mechanisms, and feed-forward neural layers. Ultron maintains complete execution sovereignty on the host GPU without network calls. Chapter 4: System Engineering Deep Dive. This section discusses layer normalization, residual connections, multi-head self-attention mechanisms, and feed-forward neural layer",
+    "alization, residual connections, multi-head self-attention mechanisms, and feed-forward neural layers. Ultron maintains complete execution sovereignty on the host GPU without network calls. Chapter 4: System Engineering Deep Dive. This section discusses layer normalization, residual connections, multi-head self-attention mechanisms, and feed-forward neural layers. Ultron maintains complete execution sovereignty on the host GPU without network calls.",
+    "Model Alpha has 10 million parameters and runs on CPU.",
+    "Model Beta has 50 million parameters and requires a GPU.",
+    "Offline document indexing test without Ollama."
   ],
   "metadatas": [
     {
@@ -11705,6 +11731,188 @@
       "chunk_id": 947,
       "page": 253,
       "char_count": 62
+    },
+    {
+      "document_id": "doc_ead62cc0d9",
+      "filename": "scenario_manual.pdf",
+      "chunk_id": 1,
+      "page": 1,
+      "char_count": 67
+    },
+    {
+      "document_id": "doc_ee0ec43de8",
+      "filename": "scenario_guide.md",
+      "chunk_id": 1,
+      "page": null,
+      "char_count": 236
+    },
+    {
+      "document_id": "doc_5a18a5822d",
+      "filename": "scenario_long_spec.txt",
+      "chunk_id": 1,
+      "page": null,
+      "char_count": 500
+    },
+    {
+      "document_id": "doc_5a18a5822d",
+      "filename": "scenario_long_spec.txt",
+      "chunk_id": 2,
+      "page": null,
+      "char_count": 500
+    },
+    {
+      "document_id": "doc_5a18a5822d",
+      "filename": "scenario_long_spec.txt",
+      "chunk_id": 3,
+      "page": null,
+      "char_count": 500
+    },
+    {
+      "document_id": "doc_5a18a5822d",
+      "filename": "scenario_long_spec.txt",
+      "chunk_id": 4,
+      "page": null,
+      "char_count": 499
+    },
+    {
+      "document_id": "doc_5a18a5822d",
+      "filename": "scenario_long_spec.txt",
+      "chunk_id": 5,
+      "page": null,
+      "char_count": 500
+    },
+    {
+      "document_id": "doc_5a18a5822d",
+      "filename": "scenario_long_spec.txt",
+      "chunk_id": 6,
+      "page": null,
+      "char_count": 500
+    },
+    {
+      "document_id": "doc_5a18a5822d",
+      "filename": "scenario_long_spec.txt",
+      "chunk_id": 7,
+      "page": null,
+      "char_count": 500
+    },
+    {
+      "document_id": "doc_5a18a5822d",
+      "filename": "scenario_long_spec.txt",
+      "chunk_id": 8,
+      "page": null,
+      "char_count": 500
+    },
+    {
+      "document_id": "doc_5a18a5822d",
+      "filename": "scenario_long_spec.txt",
+      "chunk_id": 9,
+      "page": null,
+      "char_count": 500
+    },
+    {
+      "document_id": "doc_5a18a5822d",
+      "filename": "scenario_long_spec.txt",
+      "chunk_id": 10,
+      "page": null,
+      "char_count": 500
+    },
+    {
+      "document_id": "doc_5a18a5822d",
+      "filename": "scenario_long_spec.txt",
+      "chunk_id": 11,
+      "page": null,
+      "char_count": 499
+    },
+    {
+      "document_id": "doc_5a18a5822d",
+      "filename": "scenario_long_spec.txt",
+      "chunk_id": 12,
+      "page": null,
+      "char_count": 500
+    },
+    {
+      "document_id": "doc_5a18a5822d",
+      "filename": "scenario_long_spec.txt",
+      "chunk_id": 13,
+      "page": null,
+      "char_count": 500
+    },
+    {
+      "document_id": "doc_5a18a5822d",
+      "filename": "scenario_long_spec.txt",
+      "chunk_id": 14,
+      "page": null,
+      "char_count": 500
+    },
+    {
+      "document_id": "doc_5a18a5822d",
+      "filename": "scenario_long_spec.txt",
+      "chunk_id": 15,
+      "page": null,
+      "char_count": 500
+    },
+    {
+      "document_id": "doc_5a18a5822d",
+      "filename": "scenario_long_spec.txt",
+      "chunk_id": 16,
+      "page": null,
+      "char_count": 500
+    },
+    {
+      "document_id": "doc_5a18a5822d",
+      "filename": "scenario_long_spec.txt",
+      "chunk_id": 17,
+      "page": null,
+      "char_count": 499
+    },
+    {
+      "document_id": "doc_5a18a5822d",
+      "filename": "scenario_long_spec.txt",
+      "chunk_id": 18,
+      "page": null,
+      "char_count": 500
+    },
+    {
+      "document_id": "doc_5a18a5822d",
+      "filename": "scenario_long_spec.txt",
+      "chunk_id": 19,
+      "page": null,
+      "char_count": 500
+    },
+    {
+      "document_id": "doc_5a18a5822d",
+      "filename": "scenario_long_spec.txt",
+      "chunk_id": 20,
+      "page": null,
+      "char_count": 499
+    },
+    {
+      "document_id": "doc_5a18a5822d",
+      "filename": "scenario_long_spec.txt",
+      "chunk_id": 21,
+      "page": null,
+      "char_count": 453
+    },
+    {
+      "document_id": "doc_9e674db63e",
+      "filename": "alpha.txt",
+      "chunk_id": 1,
+      "page": null,
+      "char_count": 54
+    },
+    {
+      "document_id": "doc_4fba81cf66",
+      "filename": "beta.txt",
+      "chunk_id": 1,
+      "page": null,
+      "char_count": 56
+    },
+    {
+      "document_id": "doc_3d28e0e722",
+      "filename": "offline_doc.txt",
+      "chunk_id": 1,
+      "page": null,
+      "char_count": 46
     }
   ]
 }

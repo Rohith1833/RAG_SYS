@@ -1,3 +1,5 @@
+import re
+from pathlib import Path
 from typing import List, Dict, Any, Optional
 import numpy as np
 
@@ -5,8 +7,10 @@ import numpy as np
 class VectorStore:
     """
     An in-memory, numpy-based vector store.
-    Stores text passages, their embedding vectors, and optional metadata.
-    Performs nearest-neighbor semantic search using cosine similarity.
+    Stores text passages, their embedding vectors, and metadata.
+    Performs nearest-neighbor semantic search using cosine similarity,
+    with support for configurable similarity thresholds and optional
+    lightweight hybrid (semantic + keyword) reranking.
     No external vector database libraries (like FAISS or Chroma) are used.
     """
 
@@ -83,6 +87,7 @@ class VectorStore:
         """
         Compute cosine similarity between a 1D query vector 'a' and a 2D matrix 'b'.
         Formula: (a · b) / (||a|| * ||b||)
+        Optimized with unit vector dot product for pre-normalized embeddings.
 
         :param a: 1D query vector of shape (D,).
         :param b: 2D matrix of shape (N, D).
@@ -91,57 +96,117 @@ class VectorStore:
         a = np.asarray(a, dtype=np.float32).reshape(-1)
         b = np.asarray(b, dtype=np.float32)
 
-        dot_products = np.dot(b, a)
-        norm_a = np.linalg.norm(a)
-        norm_b = np.linalg.norm(b, axis=1)
+        norm_a = float(np.linalg.norm(a))
+        if norm_a > 0:
+            a = a / norm_a
 
-        # Avoid division by zero
-        denominators = np.maximum(norm_a * norm_b, 1e-10)
+        dot_products = np.dot(b, a)
+        norm_b = np.linalg.norm(b, axis=1)
+        denominators = np.maximum(norm_b, 1e-10)
         return dot_products / denominators
+
+    @staticmethod
+    def _compute_keyword_overlap(query_text: str, passage: str) -> float:
+        """
+        Compute lightweight term overlap between query and passage.
+        Extracts words > 2 chars, ignoring common punctuation.
+        """
+        q_words = set(re.findall(r"\b[a-zA-Z0-9_]{3,}\b", query_text.lower()))
+        if not q_words:
+            return 0.0
+        p_words = set(re.findall(r"\b[a-zA-Z0-9_]{3,}\b", passage.lower()))
+        overlap = len(q_words & p_words)
+        return float(overlap / len(q_words))
 
     def search(
         self,
         query_vector: np.ndarray,
-        top_k: int = 2
+        top_k: int = 2,
+        min_score: Optional[float] = None,
+        query_text: Optional[str] = None,
+        hybrid_weight: float = 0.85
     ) -> List[Dict[str, Any]]:
         """
         Search for the top-k most semantically similar chunks to the query vector.
+        Supports optional similarity thresholding and hybrid scoring.
 
         :param query_vector: 1D embedding vector of the user query.
         :param top_k: Maximum number of results to return.
+        :param min_score: Optional minimum score threshold (filters out irrelevant chunks).
+        :param query_text: Optional raw query string for hybrid keyword matching.
+        :param hybrid_weight: Weight for semantic similarity vs keyword overlap (default: 0.85).
         :return: List of dicts:
                  [{"score": float, "text": str, "metadata": dict}]
-                 Sorted in descending order of similarity score.
+                 Sorted in descending order of score.
         """
         if self.vectors is None or len(self.texts) == 0:
             return []
 
-        # Compute cosine similarity across all stored passage vectors
-        similarities = self.cosine_similarity(query_vector, self.vectors)
+        # 1. Compute cosine similarities via BLAS dot product
+        cosine_scores = self.cosine_similarity(query_vector, self.vectors)
 
-        # Determine indices of top-k highest similarity scores
-        top_indices = np.argsort(similarities)[::-1][:top_k]
+        # 2. Combine with keyword overlap if query_text is provided
+        if query_text and hybrid_weight < 1.0:
+            # Optimize by scoring candidates that have non-trivial semantic similarity
+            # or are within top candidates, rather than running regex across all chunks
+            candidate_indices = np.where(cosine_scores >= 0.05)[0]
+            if len(candidate_indices) < top_k * 3:
+                # If few chunks pass 0.05, consider top 20 by cosine
+                candidate_indices = np.argsort(cosine_scores)[-20:][::-1]
+
+            combined_scores = cosine_scores.copy()
+            for idx in candidate_indices:
+                text = self.texts[idx]
+                kw_score = self._compute_keyword_overlap(query_text, text)
+                cos_s = max(float(cosine_scores[idx]), 0.0)
+                combined_scores[idx] = hybrid_weight * cos_s + (1.0 - hybrid_weight) * kw_score
+
+            scores_to_rank = combined_scores
+        else:
+            scores_to_rank = cosine_scores
+
+        # 3. Determine indices sorted descending
+        sorted_indices = np.argsort(scores_to_rank)[::-1]
 
         results = []
-        for idx in top_indices:
+        for idx in sorted_indices:
+            score = float(round(float(scores_to_rank[idx]), 4))
+            # Apply similarity threshold filtering if requested
+            if min_score is not None and score < min_score:
+                continue
+
             results.append({
-                "score": float(round(float(similarities[idx]), 4)),
+                "score": score,
                 "text": self.texts[idx],
                 "metadata": self.metadatas[idx]
             })
 
+            if len(results) >= top_k:
+                break
+
         return results
+
+    def get_document_chunks(self, document_id: str) -> List[Dict[str, Any]]:
+        """
+        Retrieve all stored chunks belonging to a specific document ID.
+        Preserves original document order.
+        """
+        chunks = []
+        for i, meta in enumerate(self.metadatas):
+            if meta.get("document_id") == document_id:
+                chunks.append({
+                    "text": self.texts[i],
+                    "metadata": meta,
+                    "index": i
+                })
+        return chunks
 
     def save(self, index_dir: Any):
         """
-        Persist the in-memory vectors, texts, and metadata to disk.
+        Persist in-memory vectors, texts, and metadata to disk.
         Uses NumPy binary format (.npy) for vectors and JSON for metadata.
-        No external vector database is used.
-
-        :param index_dir: Path or directory string where index files are saved.
         """
         import json
-        from pathlib import Path
 
         path = Path(index_dir)
         path.mkdir(parents=True, exist_ok=True)
@@ -165,12 +230,9 @@ class VectorStore:
     def load(self, index_dir: Any) -> bool:
         """
         Load persisted vectors, texts, and metadata from disk into memory.
-
-        :param index_dir: Directory containing 'embeddings.npy' and 'metadata.json'.
-        :return: True if loaded successfully, False if index files do not exist.
+        Validates index integrity and performs auto-repair if mismatched.
         """
         import json
-        from pathlib import Path
 
         path = Path(index_dir)
         embeddings_file = path / "embeddings.npy"
@@ -183,11 +245,26 @@ class VectorStore:
             with open(metadata_file, "r", encoding="utf-8") as f:
                 data = json.load(f)
 
-            self.texts = data.get("texts", [])
-            self.metadatas = data.get("metadatas", [])
-            self.vectors = np.load(str(embeddings_file))
+            texts = data.get("texts", [])
+            metadatas = data.get("metadatas", [])
+            vectors = np.load(str(embeddings_file))
 
+            # Integrity check: vector row count must equal text count
+            if len(texts) != vectors.shape[0]:
+                print(
+                    f"[VectorStore Warning] Mismatch between texts ({len(texts)}) "
+                    f"and vectors ({vectors.shape[0]}). Truncating to valid range."
+                )
+                valid_count = min(len(texts), vectors.shape[0])
+                texts = texts[:valid_count]
+                metadatas = metadatas[:valid_count]
+                vectors = vectors[:valid_count]
+
+            self.texts = texts
+            self.metadatas = metadatas
+            self.vectors = vectors
             return True
+
         except Exception as err:
             print(f"[VectorStore Error] Failed to load index from '{index_dir}': {err}")
             return False
@@ -225,11 +302,7 @@ class VectorStore:
     def clear(self, index_dir: Optional[Any] = None):
         """
         Reset the vector store in memory, and optionally purge saved disk files.
-
-        :param index_dir: Optional index directory to clean on disk.
         """
-        from pathlib import Path
-
         self.texts = []
         self.vectors = None
         self.metadatas = []

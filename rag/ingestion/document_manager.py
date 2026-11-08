@@ -13,8 +13,9 @@ class DocumentManager:
     Responsibilities:
     1. Persist uploaded document files locally under `rag/uploads/`.
     2. Maintain an index registry in `rag/index/documents.json`.
-    3. Track metadata per document (id, filename, file_type, chunk count, upload status, timestamp).
-    4. Provide methods to list, lookup, add, remove, and clear documents.
+    3. Track metadata per document (id, filename, file_hash, file_type, chunk count, upload status, timestamp).
+    4. Detect duplicates using content SHA-256 hash.
+    5. Provide methods to list, lookup, add, remove, and clear documents.
     """
 
     def __init__(
@@ -60,6 +61,24 @@ class DocumentManager:
         """Retrieve a specific document record by its ID."""
         return self._documents.get(doc_id)
 
+    def find_by_hash(self, file_hash: str) -> Optional[Dict[str, Any]]:
+        """Look up an indexed document by its SHA-256 content hash."""
+        if not file_hash:
+            return None
+        for doc in self._documents.values():
+            if doc.get("file_hash") == file_hash and doc.get("status") == "indexed":
+                return doc
+        return None
+
+    def find_by_filename(self, filename: str) -> Optional[Dict[str, Any]]:
+        """Look up an indexed document by its original filename."""
+        if not filename:
+            return None
+        for doc in self._documents.values():
+            if doc.get("filename") == filename:
+                return doc
+        return None
+
     def register_document(
         self,
         filename: str,
@@ -67,17 +86,19 @@ class DocumentManager:
         file_type: str,
         number_of_chunks: int,
         file_size: int,
-        doc_id: Optional[str] = None
+        doc_id: Optional[str] = None,
+        file_hash: Optional[str] = None
     ) -> Dict[str, Any]:
         """
         Record a newly uploaded and indexed document.
 
         :param filename: Original user filename (e.g. 'project_notes.txt').
         :param stored_path: Path where the file is stored under uploads.
-        :param file_type: File extension/type (e.g. 'txt', 'md', 'pdf').
+        :param file_type: File extension/type (e.g. 'txt', 'md', 'pdf', 'docx').
         :param number_of_chunks: Number of chunks extracted and indexed.
         :param file_size: Size of the file in bytes.
         :param doc_id: Optional custom document ID; generates a UUID if None.
+        :param file_hash: SHA-256 hex digest of file content for deduplication.
         :return: Document record dictionary.
         """
         doc_id = doc_id or f"doc_{uuid.uuid4().hex[:12]}"
@@ -86,6 +107,7 @@ class DocumentManager:
         record = {
             "document_id": doc_id,
             "filename": filename,
+            "file_hash": file_hash,
             "stored_path": str(stored_path.resolve()),
             "file_type": file_type.lstrip(".").lower(),
             "number_of_chunks": number_of_chunks,
@@ -95,6 +117,22 @@ class DocumentManager:
         }
 
         self._documents[doc_id] = record
+        self._save_registry()
+        return record
+
+    def update_status(
+        self,
+        doc_id: str,
+        status: str,
+        error_message: Optional[str] = None
+    ) -> Optional[Dict[str, Any]]:
+        """Update the processing status of a document."""
+        record = self._documents.get(doc_id)
+        if not record:
+            return None
+        record["status"] = status
+        if error_message:
+            record["error"] = error_message
         self._save_registry()
         return record
 

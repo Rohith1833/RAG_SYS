@@ -14,7 +14,8 @@ class SemanticRetriever:
     """
     Coordinates semantic vector retrieval by composing an Embedder
     and an in-memory VectorStore.
-    Maps text queries to dense vectors and finds the closest document chunks.
+    Maps text queries to dense vectors and finds the closest document chunks,
+    with support for minimum similarity thresholds and hybrid keyword reranking.
     """
 
     def __init__(
@@ -61,22 +62,34 @@ class SemanticRetriever:
     def retrieve(
         self,
         query: str,
-        top_k: int = 2
+        top_k: int = 2,
+        min_score: Optional[float] = None,
+        hybrid: bool = True,
+        hybrid_weight: float = 0.85
     ) -> List[Dict[str, Any]]:
         """
         Embed a user's natural language query and retrieve the top-k most similar chunks.
 
         :param query: User query text.
         :param top_k: Number of highest-similarity passages to return.
+        :param min_score: Optional minimum score threshold to exclude low-relevance noise.
+        :param hybrid: Whether to enable lightweight hybrid keyword scoring boost.
+        :param hybrid_weight: Relative weight of semantic cosine score vs keyword overlap.
         :return: List of dicts with {"score": float, "text": str, "metadata": dict}.
         """
+        if not query or not query.strip():
+            return []
+
         # Step 1: Embed the search query into the same semantic space
         query_vector = self.embedder.embed_text(query)
 
         # Step 2: Execute similarity search against stored document vectors
         results = self.vector_store.search(
             query_vector=query_vector,
-            top_k=top_k
+            top_k=top_k,
+            min_score=min_score,
+            query_text=query if hybrid else None,
+            hybrid_weight=hybrid_weight
         )
 
         return results

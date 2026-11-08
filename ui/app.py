@@ -1,7 +1,8 @@
+import json
 import sys
 import time
 from pathlib import Path
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, Response, stream_with_context
 import torch
 import torch.nn.functional as F
 from tokenizers import Tokenizer
@@ -12,18 +13,27 @@ from tokenizers import Tokenizer
 UI_DIR = Path(__file__).resolve().parent
 PROJECT_ROOT = UI_DIR.parent
 
-# Append data and models directories without modifying existing code
 sys.path.append(str(PROJECT_ROOT / "models"))
 sys.path.append(str(PROJECT_ROOT / "backend"))
+sys.path.append(str(PROJECT_ROOT / "rag"))
+sys.path.append(str(PROJECT_ROOT / "rag" / "v2"))
+sys.path.append(str(PROJECT_ROOT / "rag" / "ingestion"))
 
 from ultron_v2 import UltronV2
 from rag_service import RAGService
+from database import Database
 
 app = Flask(
     __name__,
     template_folder=str(UI_DIR / "templates"),
     static_folder=str(UI_DIR / "static")
 )
+
+# Enforce 50 MB max file upload size
+app.config["MAX_CONTENT_LENGTH"] = 50 * 1024 * 1024
+
+# Initialize persistent SQLite database
+db = Database()
 
 # Initialize RAG Service once at server startup
 rag_service = None
@@ -35,7 +45,7 @@ except Exception as _rag_err:
 
 
 # --------------------------------------------------
-# Model Configuration & Device Setup
+# Ultron v0.2 Model Configuration & Device Setup (Preserved Baseline)
 # --------------------------------------------------
 CHECKPOINT_PATH = PROJECT_ROOT / "checkpoints" / "ultron_v2_checkpoint.pt"
 TOKENIZER_PATH = PROJECT_ROOT / "data" / "real" / "tokenizer.json"
@@ -114,7 +124,7 @@ def load_model():
         print(f"[Ultron Error] Failed to load v0.2 model: {e}")
 
 
-# Initialize model on startup
+# Initialize v0.2 model on startup
 load_model()
 
 
@@ -163,7 +173,7 @@ def generate_text(prompt: str, max_new_tokens: int = 100, temperature: float = 0
 
 
 # --------------------------------------------------
-# Routes
+# Web Application & API Routes
 # --------------------------------------------------
 @app.route("/")
 def index():
@@ -172,6 +182,7 @@ def index():
 
 @app.route("/api/info", methods=["GET"])
 def api_info():
+    """Ultron v0.2 PyTorch model telemetry."""
     is_ready = model is not None
     model_param_device = str(next(model.parameters()).device) if is_ready else str(device)
     vocab_size = tokenizer.get_vocab_size() if tokenizer else 2000
@@ -198,6 +209,7 @@ def api_info():
 
 @app.route("/api/generate", methods=["POST"])
 def api_generate():
+    """Ultron v0.2 PyTorch inference endpoint."""
     data = request.get_json(silent=True) or {}
 
     prompt = data.get("prompt", "")
@@ -240,17 +252,18 @@ def api_generate():
         return jsonify({"error": f"Generation error: {str(e)}"}), 500
 
 
-# --------------------------------------------------
-# Step 10: Local RAG Assistant API Endpoints
-# --------------------------------------------------
 @app.route("/api/health", methods=["GET"])
 def api_health():
-    """System and local RAG health telemetry."""
+    """System, sub-system, and Ollama health telemetry."""
     if rag_service is None:
         return jsonify({
             "status": "error",
             "error": "RAG Service is not initialized on the server.",
             "ollama": False,
+            "generation_ready": False,
+            "embedding_ready": False,
+            "ingestion_ready": False,
+            "retrieval_ready": False,
             "device": str(device)
         }), 500
 
@@ -264,9 +277,248 @@ def api_health():
         }), 500
 
 
+# --------------------------------------------------
+# Conversation Management Endpoints
+# --------------------------------------------------
+@app.route("/api/conversations", methods=["GET"])
+def api_list_conversations():
+    """List all saved conversations ordered by recency."""
+    try:
+        convs = db.list_conversations()
+        return jsonify({"conversations": convs})
+    except Exception as err:
+        return jsonify({"error": f"Failed to list conversations: {str(err)}"}), 500
+
+
+@app.route("/api/conversations", methods=["POST"])
+def api_create_conversation():
+    """Create a new conversation session."""
+    data = request.get_json(silent=True) or {}
+    title = data.get("title", "New Conversation")
+    mode = data.get("mode", "rag")
+    try:
+        conv = db.create_conversation(title=title, mode=mode)
+        return jsonify(conv), 201
+    except Exception as err:
+        return jsonify({"error": f"Failed to create conversation: {str(err)}"}), 500
+
+
+@app.route("/api/conversations/<conv_id>", methods=["GET"])
+def api_get_conversation(conv_id):
+    """Retrieve conversation details and chronological message history."""
+    try:
+        conv = db.get_conversation(conv_id)
+        if not conv:
+            return jsonify({"error": f"Conversation '{conv_id}' not found."}), 404
+        messages = db.get_messages(conv_id)
+        conv["messages"] = messages
+        return jsonify(conv), 200
+    except Exception as err:
+        return jsonify({"error": f"Failed to load conversation: {str(err)}"}), 500
+
+
+@app.route("/api/conversations/<conv_id>", methods=["DELETE"])
+def api_delete_conversation(conv_id):
+    """Delete a conversation and its messages."""
+    try:
+        deleted = db.delete_conversation(conv_id)
+        if not deleted:
+            return jsonify({"error": f"Conversation '{conv_id}' not found."}), 404
+        return jsonify({"status": "success", "message": f"Conversation '{conv_id}' deleted."}), 200
+    except Exception as err:
+        return jsonify({"error": f"Failed to delete conversation: {str(err)}"}), 500
+
+
+# --------------------------------------------------
+# Chat & Document RAG Endpoints
+# --------------------------------------------------
+@app.route("/api/chat", methods=["POST"])
+def api_chat():
+    """
+    Unified dual-mode chat endpoint:
+    - mode='general': Unconstrained chat with llama3:latest (no document retrieval).
+    - mode='rag': Grounded document question-answering with semantic & hybrid retrieval.
+    Persists user & assistant messages to SQLite if conversation_id is provided.
+    """
+    if rag_service is None:
+        return jsonify({"error": "RAG Service is not initialized."}), 500
+
+    data = request.get_json(silent=True) or {}
+    message = data.get("message") or data.get("prompt") or ""
+    mode = data.get("mode", "rag")
+    conv_id = data.get("conversation_id")
+    top_k = data.get("top_k", 3)
+    min_score = data.get("min_score", 0.20)
+
+    try:
+        top_k = int(top_k)
+    except (ValueError, TypeError):
+        top_k = 3
+
+    if not message.strip():
+        return jsonify({"error": "Question message cannot be empty."}), 400
+
+    # Ensure conversation exists if conv_id provided
+    history = []
+    if conv_id:
+        existing_conv = db.get_conversation(conv_id)
+        if not existing_conv:
+            # Create on the fly
+            title = message.strip()[:40] + ("..." if len(message.strip()) > 40 else "")
+            db.create_conversation(title=title, mode=mode)
+        else:
+            # Auto-title conversation from first user message if it has default title
+            if existing_conv.get("title") == "New Conversation":
+                title = message.strip()[:40] + ("..." if len(message.strip()) > 40 else "")
+                db.update_conversation(conv_id, title=title)
+
+            # Load history turns for conversation-aware context
+            raw_msgs = db.get_messages(conv_id)
+            history = [{"role": m["role"], "content": m["content"]} for m in raw_msgs]
+
+        # Record user message in DB
+        db.add_message(conv_id, "user", message.strip())
+
+    try:
+        # Call RAGService dual-mode chat
+        result = rag_service.chat(
+            message=message,
+            mode=mode,
+            conversation_history=history,
+            top_k=top_k,
+            min_score=min_score
+        )
+
+        # Record assistant reply in DB if in conversation session
+        if conv_id:
+            db.add_message(
+                conversation_id=conv_id,
+                role="assistant",
+                content=result.get("answer", ""),
+                sources=result.get("sources"),
+                metadata={
+                    "latency_ms": result.get("latency_ms"),
+                    "mode": mode,
+                    "retrieved_count": result.get("retrieved_count")
+                }
+            )
+
+        result["conversation_id"] = conv_id
+        return jsonify(result), 200
+
+    except ConnectionError as ce:
+        return jsonify({
+            "error": f"Ollama connection error: {str(ce)}. Please ensure 'ollama serve' is running."
+        }), 503
+    except ValueError as ve:
+        return jsonify({"error": str(ve)}), 400
+    except Exception as e:
+        return jsonify({"error": f"Answering error: {str(e)}"}), 500
+
+
+@app.route("/api/chat/stream", methods=["POST"])
+def api_chat_stream():
+    """
+    Server-Sent Events (SSE) streaming chat endpoint.
+    Streams tokens in real time from Llama 3 via Ollama.
+    Persists final user & assistant messages to SQLite.
+    """
+    if rag_service is None:
+        return jsonify({"error": "RAG Service is not initialized."}), 500
+
+    data = request.get_json(silent=True) or {}
+    message = data.get("message") or data.get("prompt") or ""
+    mode = data.get("mode", "rag")
+    conv_id = data.get("conversation_id")
+    top_k = data.get("top_k", 3)
+    min_score = data.get("min_score", 0.20)
+
+    try:
+        top_k = int(top_k)
+    except (ValueError, TypeError):
+        top_k = 3
+
+    if not message.strip():
+        return jsonify({"error": "Question message cannot be empty."}), 400
+
+    # Ensure conversation and record user message
+    history = []
+    if conv_id:
+        existing_conv = db.get_conversation(conv_id)
+        if not existing_conv:
+            title = message.strip()[:40] + ("..." if len(message.strip()) > 40 else "")
+            db.create_conversation(title=title, mode=mode)
+        else:
+            if existing_conv.get("title") == "New Conversation":
+                title = message.strip()[:40] + ("..." if len(message.strip()) > 40 else "")
+                db.update_conversation(conv_id, title=title)
+            raw_msgs = db.get_messages(conv_id)
+            history = [{"role": m["role"], "content": m["content"]} for m in raw_msgs]
+
+        db.add_message(conv_id, "user", message.strip())
+
+    def event_stream():
+        full_answer = ""
+        sources = []
+        try:
+            for ev in rag_service.chat_stream(
+                message=message,
+                mode=mode,
+                conversation_history=history,
+                top_k=top_k,
+                min_score=min_score
+            ):
+                if ev.get("type") == "meta":
+                    sources = ev.get("sources", [])
+                elif ev.get("type") == "token":
+                    full_answer += ev.get("token", "")
+                elif ev.get("type") == "done":
+                    full_answer = ev.get("full_answer", full_answer)
+                    if conv_id:
+                        db.add_message(
+                            conversation_id=conv_id,
+                            role="assistant",
+                            content=full_answer,
+                            sources=sources,
+                            metadata={"mode": mode, "latency_ms": ev.get("total_ms")}
+                        )
+                ev["conversation_id"] = conv_id
+                yield f"data: {json.dumps(ev)}\n\n"
+        except Exception as ex:
+            err_payload = {"type": "error", "error": str(ex), "conversation_id": conv_id}
+            yield f"data: {json.dumps(err_payload)}\n\n"
+
+    return Response(
+        stream_with_context(event_stream()),
+        mimetype="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "X-Accel-Buffering": "no"
+        }
+    )
+
+
+@app.route("/api/model/unload", methods=["POST"])
+def api_unload_model():
+    """Unload Llama 3 model from GPU VRAM on demand."""
+    if rag_service is None:
+        return jsonify({"error": "RAG Service is not initialized."}), 500
+    try:
+        success = rag_service.unload_model()
+        return jsonify({
+            "status": "success" if success else "failed",
+            "message": "Model unloaded from GPU memory." if success else "Could not unload model."
+        }), 200
+    except Exception as err:
+        return jsonify({"error": f"Failed to unload model: {str(err)}"}), 500
+
+
+# --------------------------------------------------
+# Document Ingestion & Management Endpoints
+# --------------------------------------------------
 @app.route("/api/upload", methods=["POST"])
 def api_upload():
-    """Upload and index a document into the local RAG knowledge base."""
+    """Upload and index a document into the local knowledge base."""
     if rag_service is None:
         return jsonify({"error": "RAG Service is not initialized."}), 500
 
@@ -280,9 +532,9 @@ def api_upload():
     filename = file.filename
     ext = Path(filename).suffix.lower()
 
-    if ext not in {".txt", ".md", ".pdf"}:
+    if ext not in {".txt", ".md", ".pdf", ".docx"}:
         return jsonify({
-            "error": f"Unsupported file type '{ext}'. Please upload .txt, .md, or .pdf files."
+            "error": f"Unsupported file type '{ext}'. Please upload .txt, .md, .pdf, or .docx files."
         }), 400
 
     try:
@@ -327,6 +579,49 @@ def api_delete_document(document_id):
         return jsonify({"error": str(e)}), 500
 
 
+@app.route("/api/documents/<document_id>/summarize", methods=["POST"])
+def api_summarize_document(document_id):
+    """Generate a complete long-document summary."""
+    if rag_service is None:
+        return jsonify({"error": "RAG Service is not initialized."}), 500
+
+    data = request.get_json(silent=True) or {}
+    style = data.get("style", "detailed")
+
+    try:
+        summary_result = rag_service.summarize_document(document_id=document_id, style=style)
+        return jsonify(summary_result), 200
+    except ValueError as ve:
+        return jsonify({"error": str(ve)}), 404
+    except ConnectionError:
+        return jsonify({
+            "error": "Ollama is currently offline. Complete document summarization requires Ollama (llama3:latest)."
+        }), 503
+    except Exception as e:
+        return jsonify({"error": f"Summarization failed: {str(e)}"}), 500
+
+
+@app.route("/api/retrieve", methods=["POST"])
+def api_retrieve():
+    """Direct semantic retrieval test endpoint."""
+    if rag_service is None:
+        return jsonify({"error": "RAG Service is not initialized."}), 500
+
+    data = request.get_json(silent=True) or {}
+    query = data.get("query", "")
+    top_k = data.get("top_k", 5)
+    min_score = data.get("min_score")
+
+    if not query.strip():
+        return jsonify({"error": "Query cannot be empty."}), 400
+
+    try:
+        results = rag_service.direct_retrieve(query=query, top_k=int(top_k), min_score=min_score)
+        return jsonify({"query": query, "results": results, "count": len(results)}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
 @app.route("/api/index/clear", methods=["POST"])
 def api_clear_index():
     """Clear all indexed documents and reset the vector store."""
@@ -340,39 +635,39 @@ def api_clear_index():
         return jsonify({"error": str(e)}), 500
 
 
-@app.route("/api/chat", methods=["POST"])
-def api_chat():
-    """
-    Perform semantic retrieval and generate grounded response with Llama 3.
-    """
-    if rag_service is None:
-        return jsonify({"error": "RAG Service is not initialized."}), 500
+# --------------------------------------------------
+# Settings Endpoints
+# --------------------------------------------------
+@app.route("/api/settings", methods=["GET"])
+def api_get_settings():
+    """Retrieve saved application settings."""
+    try:
+        settings = db.get_all_settings()
+        # Defaults
+        defaults = {
+            "model": "llama3:latest",
+            "temperature": "0.7",
+            "top_k": "3",
+            "default_mode": "rag",
+            "similarity_threshold": "0.20"
+        }
+        defaults.update(settings)
+        return jsonify(defaults), 200
+    except Exception as err:
+        return jsonify({"error": str(err)}), 500
 
+
+@app.route("/api/settings", methods=["POST"])
+def api_set_settings():
+    """Update application settings."""
     data = request.get_json(silent=True) or {}
-    message = data.get("message") or data.get("prompt") or ""
-    top_k = data.get("top_k", 3)
-
     try:
-        top_k = int(top_k)
-    except (ValueError, TypeError):
-        top_k = 3
-
-    if not message.strip():
-        return jsonify({"error": "Question message cannot be empty."}), 400
-
-    try:
-        result = rag_service.ask_question(message=message, top_k=top_k)
-        return jsonify(result), 200
-    except ConnectionError as ce:
-        return jsonify({
-            "error": f"Ollama connection error: {str(ce)}. Please ensure 'ollama serve' is running."
-        }), 503
-    except ValueError as ve:
-        return jsonify({"error": str(ve)}), 400
-    except Exception as e:
-        return jsonify({"error": f"RAG answering error: {str(e)}"}), 500
+        for k, v in data.items():
+            db.set_setting(k, str(v))
+        return jsonify({"status": "success", "message": "Settings updated."}), 200
+    except Exception as err:
+        return jsonify({"error": str(err)}), 500
 
 
 if __name__ == "__main__":
     app.run(host="127.0.0.1", port=5000, debug=False)
-

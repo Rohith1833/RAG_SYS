@@ -1,0 +1,1 @@
+Offline document indexing test without Ollama.
